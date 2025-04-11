@@ -36,6 +36,7 @@ contract FundMe {
     function getAdderss() public view returns(address){
         return msg.sender;
     }
+    
     modifier  onlyOwner{
         require(owner == payable(msg.sender));
         _;
@@ -53,12 +54,16 @@ contract FundMe {
     }
 
     function transfer(address _address) payable public{
-        payable(_address).transfer(address(this).balance);
+        payable(_address).transfer(msg.value);
     }
 
     function getAddressThis() public view returns(uint256){
         return address(this).balance;
         
+    }
+
+    function getBalance(address _address) public view returns(uint256){
+        return _address.balance;
     }
 
     
