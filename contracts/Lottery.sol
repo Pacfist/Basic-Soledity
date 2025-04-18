@@ -37,7 +37,7 @@ contract Lottery is Ownable {
         return costToEnter;
     }
     function startLottery() public onlyOwner{
-        require(lottery_state == LOTTERY_STATE.CLOSED, "Can't start a new lottery yet");
+        require(lottery_state == LOTTERY_STATE.CLOSED, "Can't start a new lottery yet.");
         lottery_state = LOTTERY_STATE.OPEN;
     }
     function endLottery() public onlyOwner {
