@@ -22,7 +22,7 @@ contract Lottery is Ownable {
     }
     function enter() public payable {
         require(lottery_state == LOTTERY_STATE.OPEN);
-        require(msg.value >= getEntranceFee(), "Not enough ETH!");
+        require(msg.value >= getEntranceFee(), "Not enough ETH! ");
         players.push(payable(msg.sender));
     }
     function getEntranceFee() public  view returns(uint256){
