@@ -15,6 +15,16 @@ contract Elections{
 
     bool public isVoteGoes;
 
+    error errorOwner();
+
+    event Voted(uint256 index, address voter); 
+
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
     constructor(string[] memory _electors, uint256 _maxVotes, uint256 _electionTime){
         maxVotes = _maxVotes;
         electors = _electors;
@@ -32,10 +42,12 @@ contract Elections{
         isVoted[msg.sender] = true;
         numberOfVotes[_number] +=1;
         maxVotes -=1;
+
+        emit Voted(_number, msg.sender);
     }
 
-    function stopVoting() public{
-        require(msg.sender == owner, "Not owner");
+    function stopVoting() public onlyOwner { 
+        
         isVoteGoes = false;
     }
 }
