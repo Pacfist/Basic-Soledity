@@ -1,31 +1,54 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {PriceConverter} from "./PriceConverter.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FundMe{
+contract FundMe is Ownable{
+    
+    using PriceConverter for uint256;
+    
+    uint256 public constant MINUSD = 5 * (10 ** 18);
 
-    uint256 public minUSD = 0.1 * (10 ** 18);
+    address[] public funders;
+    mapping(address => uint256) public fundersAndMoney; 
 
-    AggregatorV3Interface internal priceFeed;
+    uint256 public getMinimumDeposit = (1e36 * 5)  / PriceConverter.getPrice();
 
-    mapping(address => uint256) public fundersAndMoney;
-    constructor() {
-        priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-    }
+    constructor(address initialOwner) Ownable(initialOwner) {}
     function fund() public payable{
-        //require(getConversionRate(msg.value) >= minUSD, "Not enough eth!");
+        require(msg.value.getConversionRate() >= MINUSD, "Not enough eth!");
+        funders.push(msg.sender);
         fundersAndMoney[msg.sender] += msg.value;
         
     }
-    function getPrice() public view returns (uint256) {
-        (, int256 price, , ,) = priceFeed.latestRoundData();
-        return uint256(price * 1e10); // Convert from 8 decimals to 18 decimals
+    function withdraw() public onlyOwner {
+        for(uint256 i =0; i < funders.length;i ++){
+            address funder = funders[i];
+            fundersAndMoney[funder] = 0;
+        }
+        funders = new address[](0);
+        //transfer
+        //payable(msg.sender).transfer(address(this).balance);
+
+        //send
+        //bool sendSuccess =  payable(msg.sender).send(address(this).balance);
+        //require(sendSuccess, "Error during sending");
+
+        (bool callSuc,  ) = payable(msg.sender).call{value:address(this).balance}("");
+        require(callSuc, "Call failed");
     }
 
-    function getConversionRate(uint256 ethAmount) public view returns(uint256) {
-        uint256 ethPrice = getPrice();
-        uint256 ethInUSD = (ethPrice * ethAmount) / 1e18;
-        return ethInUSD;
+    function balanceOfContract() public view returns(uint256){
+        return address(this).balance;
     }
+
+    receive() external payable{
+        fund();
+    }
+
+    fallback() external payable{
+        fund();
+    }
+    
 }
